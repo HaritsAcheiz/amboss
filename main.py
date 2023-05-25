@@ -3,18 +3,18 @@ import json
 import httpx
 import selectolax
 from dataclasses import dataclass
-from selenium.webdriver import Keys
+from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
-
+import creds
 
 @dataclass
 class Scraper:
 
-    def get_data(self)
+    def get_data(self):
         useragent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/113.0'
         ff_opt = Options()
         # ff_opt.add_argument('-headless')
@@ -26,20 +26,36 @@ class Scraper:
         driver.fullscreen_window()
         driver.get('https://next.amboss.com/de/login')
 
+        wait = WebDriverWait(driver, 15)
+
         # login
-        WebDriverWait(driver, 10).until(
-            ec.element_to_be_clickable((By.CSS_SELECTOR, 'input.css-1hyb8hy.e1dohmou0'))).send_keys(creds.user_email + Keys.TAB + creds.user_pass + Keys.RETURN)
-        # element = WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CSS_SELECTOR, 'input#user_password')))
-        # element.click()
-        # element.send_keys(user_pass + Keys.RETURN)
-        # cookies = driver.get_cookies()
-        WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR,'button.css-myeuof.e1vkw3t43')))
+        wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, 'input.css-1hyb8hy.e1dohmou0'))).send_keys(creds.user_email + Keys.TAB + creds.user_pass + Keys.RETURN)
+
+        # course page
+        wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR,'button.css-myeuof.e1vkw3t43')))
         driver.find_element(By.CSS_SELECTOR, 'div.container-1598092766:nth-child(2) > div:nth-child(1) > div:nth-child(1)').click()
 
-        # WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-testid="active-course-card"]')))
-        WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR, '#started-courses > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > a:nth-child(1) > div:nth-child(1) > div:nth-child(1)'))).click()
-        WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.CSS_SELECTOR, 'div.cardsContainer--XOrFC')))
-        print(driver.title)
+        # curriculum page
+        wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, '#started-courses > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > a:nth-child(1) > div:nth-child(1) > div:nth-child(1)'))).click()
+        wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, 'div.cardsContainer--XOrFC > a:nth-of-type(1)'))).click()
+
+        # list article page
+        wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, 'div[data-e2e-test-id="sessions-history"] > a:nth-of-type(17)'))).click()
+
+        # article content
+        wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div.headerContainer--rfIL2'))).click()
+
+        title = driver.find_element(By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div.headerContainer--rfIL2 > div > h2').text
+        content = wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div'))).text
+        link_image = wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div:nth-of-type(2)'))).get_attribute('data-source')
+        glossary_loc = 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div > span'
+        glossary = ActionChains(driver).move_to_element()
+
+        print(title)
+        print(content)
+        print(link_image)
+        print(glossary)
+
         # driver.close()
         # return cookies
 

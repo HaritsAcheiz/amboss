@@ -50,17 +50,15 @@ class Scraper:
         title = driver.find_element(By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div.headerContainer--rfIL2 > div > h2').text
         content = wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div'))).text
         link_image = wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div:nth-of-type(2)'))).get_attribute('data-source')
-        mouse_gloss_locs = []
         glossaries = []
-        gloss_loc = 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div:nth-of-type(2) > aside > div:nth-of-type(2) > div'
-        for i in range(1,100):
-            mouse_gloss_locs.append(driver.find_element(By.CSS_SELECTOR, f'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div > span.api.explanation:nth-of-type({i})'))
+        mouse_gloss_locs = (driver.find_elements(By.CSS_SELECTOR, f'div[data-e2e-test-id="section-content-is-shown"] > div > div > div > span.api.explanation'))
         for mouse_gloss_loc in mouse_gloss_locs:
             try:
-                ActionChains(driver).move_to_element((By.CSS_SELECTOR, mouse_gloss_loc)).perform()
-                glossary = driver.find_element(By.CSS_SELECTOR, gloss_loc).text
+                ActionChains(driver).move_to_element(mouse_gloss_loc).perform()
+                glossary = wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'aside[data-e2e-test-id="tooltip-container"] > div:nth-of-type(2) > div > div'))).text
                 glossaries.append(glossary)
-            except NoSuchElementException:
+            except Exception as e:
+                print(e)
                 break
         glossaries = ' \n'.join(glossaries)
         print(title)

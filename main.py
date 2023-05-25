@@ -3,6 +3,8 @@ import json
 import httpx
 import selectolax
 from dataclasses import dataclass
+
+from selenium.common import NoSuchElementException
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.webdriver import WebDriver
@@ -48,13 +50,23 @@ class Scraper:
         title = driver.find_element(By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div.headerContainer--rfIL2 > div > h2').text
         content = wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div'))).text
         link_image = wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div:nth-of-type(2)'))).get_attribute('data-source')
-        glossary_loc = 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div > span'
-        glossary = ActionChains(driver).move_to_element()
-
+        mouse_gloss_locs = []
+        glossaries = []
+        gloss_loc = 'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div:nth-of-type(2) > aside > div:nth-of-type(2) > div'
+        for i in range(1,100):
+            mouse_gloss_locs.append(driver.find_element(By.CSS_SELECTOR, f'article[data-e2e-test-id="learningCardContent"] > div:nth-of-type(3) > section > div[data-e2e-test-id="section-content-is-shown"] > div > div > div > span.api.explanation:nth-of-type({i})'))
+        for mouse_gloss_loc in mouse_gloss_locs:
+            try:
+                ActionChains(driver).move_to_element((By.CSS_SELECTOR, mouse_gloss_loc)).perform()
+                glossary = driver.find_element(By.CSS_SELECTOR, gloss_loc).text
+                glossaries.append(glossary)
+            except NoSuchElementException:
+                break
+        glossaries = ' \n'.join(glossaries)
         print(title)
         print(content)
         print(link_image)
-        print(glossary)
+        print(glossaries)
 
         # driver.close()
         # return cookies
